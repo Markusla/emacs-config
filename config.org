@@ -1,0 +1,196 @@
+#+TITLE: My Emacs Configuration
+#+AUTHOR: Markus Niemeier
+#+DESCRIPTION: My Emacs config
+#+STARTUP: showeverything
+#+OPTIONS: toc:2
+#+OPTIONS: num:nil
+
+* TABLE OF CONTENTS :toc_3:
+- [[#package-management][Package Management]]
+  - [[#melpa-package-archive][MELPA Package-Archive]]
+  - [[#use-package][use-package]]
+- [[#ui][UI]]
+  - [[#display-line-inumbers-and-truncated-lines][Display Line iNumbers and Truncated Lines]]
+  - [[#remove-menu--toolbar][remove menu + toolbar]]
+    - [[#menu-bar][Menu Bar]]
+    - [[#scroll-bar][Scroll Bar]]
+    - [[#tool-bar][Tool Bar]]
+  - [[#load-current-default-theme][Load Current default theme]]
+- [[#dashboard][Dashboard]]
+- [[#org-mode][ORG MODE]]
+  - [[#enabling-table-of-contents][Enabling Table of Contents]]
+  - [[#enabling-org-bullets][Enabling Org Bullets]]
+  - [[#misc][Misc]]
+- [[#which-key][WHICH-KEY]]
+  - [[#better-defaults][Better-Defaults]]
+- [[#ivy][Ivy]]
+  - [[#setup-and-use-ivy][Setup and use Ivy]]
+  - [[#configure-swiper][Configure Swiper]]
+  - [[#counsel-configuration][Counsel configuration]]
+
+* Package Management
+
+** MELPA Package-Archive
+#+begin_src emacs-lisp
+(require 'package)
+(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+;; Comment/uncomment this line to enable MELPA Stable if desired.  See `package-archive-priorities`
+;; and `package-pinned-packages`. Most users will not need or want to do this.
+;;(add-to-list 'package-archives '("melpa-stable" . "https://stable.melpa.org/packages/") t)
+(package-initialize)
+#+end_src
+
+** use-package
+#+begin_src emacs-lisp
+(unless (package-installed-p 'use-package)
+  (package-refresh-contents)
+  (package-install 'use-package))
+
+(eval-when-compile
+  (require 'use-package))
+#+end_src
+
+* UI
+Modify the look of Emacs
+
+** Display Line iNumbers and Truncated Lines
+
+#+begin_src emacs-lisp
+(global-display-line-numbers-mode 1)
+(global-visual-line-mode t)
+#+end_src
+
+** remove menu + toolbar
+
+*** Menu Bar
+
+Switch the Menubar off by default (I like to keep everything clean)
+#+BEGIN_SRC emacs-lisp
+(menu-bar-mode -1)
+#+END_SRC
+
+... but still let me easily toggle it on/off
+#+BEGIN_SRC emacs-lisp
+;; Toggle menubar keybind
+(global-set-key (kbd "C-c m") 'menu-bar-mode)
+#+END_SRC
+*** Scroll Bar
+Remove Scroll Bars
+#+BEGIN_SRC emacs-lisp
+  (scroll-bar-mode -1)
+#+END_SRC
+
+*** Tool Bar
+Remove Tool Bars
+#+BEGIN_SRC emacs-lisp
+  (tool-bar-mode -1)
+#+END_SRC
+
+** Load Current default theme
+#+BEGIN_SRC emacs-lisp
+  (load-theme 'tango-dark t)
+#+END_SRC
+
+* Dashboard
+#+begin_src emacs-lisp
+  (use-package dashboard
+    :ensure t
+    :config
+    (dashboard-setup-startup-hook))
+
+    (setq dashboard-banner-logo-title "Welcome to Emacs, Markus!")
+    (setq dashboard-startup-banner nil)
+#+end_src
+
+* ORG MODE
+** Enabling Table of Contents
+#+begin_src emacs-lisp
+  (use-package toc-org
+    :ensure t
+    :commands toc-org-enable
+    :hook (org-mode . toc-org-enable))
+#+end_src
+
+** Enabling Org Bullets
+Org-bullets gives us attractive bullets rather than asterisks.
+
+#+begin_src emacs-lisp
+  (add-hook 'org-mode-hook 'org-indent-mode)
+  (use-package org-bullets
+    :ensure t
+    :commands org-bullets-mode
+    :hook (org-mode . org-bullets-mode))
+#+end_src
+
+** Misc
+#+begin_src emacs-lisp
+  (require 'org-tempo)
+#+end_src
+
+
+* WHICH-KEY
+
+ #+begin_src emacs-lisp
+   (use-package which-key
+     :ensure t
+     :init
+       (which-key-mode 1)
+     :config
+     (setq which-key-side-window-location 'bottom
+           which-key-sort-order #'which-key-key-order-alpha
+           which-key-sort-uppercase-first nil
+           which-key-add-column-padding 1
+           which-key-max-display-columns nil
+           which-key-min-display-lines 6
+           which-key-side-window-slot -10
+           which-key-side-window-max-height 0.25
+           which-key-idle-delay 0.8
+           which-key-max-description-length 25
+           which-key-allow-imprecise-window-fit t
+           which-key-separator " → " ))
+ #+end_src
+
+# ** Auto Complete
+# #+begin_src emacs-lisp
+# (use-package auto-complete
+# :ensure t
+# :config
+# (ac-config-default))
+# #+end_src
+
+** Better-Defaults
+ #+begin_src emacs-lisp
+   (use-package better-defaults
+          :ensure t)
+ #+end_src
+
+* Ivy
+** Setup and use Ivy
+ #+BEGIN_SRC emacs-lisp
+   (use-package ivy
+     :ensure t
+     :config
+     (ivy-mode 1)
+     (setq ivy-use-virtual-buffers t)
+     (setq enable-recursive-minibuffers t)
+     ;; Ivy Keybindings
+     (global-set-key (kbd "C-c C-r") 'ivy-resume))
+     #+END_SRC
+
+** Configure Swiper
+#+BEGIN_SRC emacs-lisp
+  (use-package swiper
+     :ensure t
+     :config
+     (global-set-key "\C-s" 'swiper))
+#+END_SRC
+
+** Counsel configuration
+#+BEGIN_SRC emacs-lisp
+(use-package counsel 
+  :ensure t
+  :config 
+  (global-set-key (kbd "M-x") 'counsel-M-x)
+  (global-set-key (kbd "C-x C-f") 'counsel-find-file))
+#+END_SRC
+
