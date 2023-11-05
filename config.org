@@ -9,9 +9,10 @@
 - [[#package-management][Package Management]]
   - [[#melpa-package-archive][MELPA Package-Archive]]
   - [[#use-package][use-package]]
+  - [[#always-use-ensure-t][always use :ensure t]]
 - [[#utf-8][UTF-8]]
 - [[#keybindings][Keybindings]]
-  - [[#esc][ESC]]
+  - [[#minibuffer-escape][MINIBUFFER ESCAPE]]
 - [[#ui][UI]]
   - [[#display-line-inumbers-and-truncated-lines][Display Line iNumbers and Truncated Lines]]
   - [[#remove-menu--toolbar][remove menu + toolbar]]
@@ -19,7 +20,12 @@
     - [[#scroll-bar][Scroll Bar]]
     - [[#tool-bar][Tool Bar]]
   - [[#load-current-default-theme][Load Current default theme]]
+  - [[#fonts][Fonts]]
+  - [[#icons-all-the-icons][Icons (all-the-icons)]]
+- [[#modeline][MODELINE]]
+- [[#neotree][NEOTREE]]
 - [[#dashboard][Dashboard]]
+- [[#company][COMPANY]]
 - [[#org-mode][ORG MODE]]
   - [[#enabling-table-of-contents][Enabling Table of Contents]]
   - [[#enabling-org-bullets][Enabling Org Bullets]]
@@ -54,7 +60,13 @@
   (require 'use-package))
 #+end_src
 
-* UTF-8
+** always use :ensure t
+#+begin_src emacs-lisp
+  (require 'use-package-ensure)
+  (setq use-package-always-ensure t)
+#+end_src
+
+* UTF-8 
 #+begin_src emacs-lisp
   (cond ((eq system-type 'windows-nt)
      ;; Windows-specific code goes here.
@@ -69,9 +81,10 @@
 
 * Keybindings
 
-** ESC
+** MINIBUFFER ESCAPE
+By default, Emacs requires you to hit ESC three times to escape quit the minibuffer.  
 #+begin_src emacs-lisp
-  (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
+  (global-set-key [escape] 'keyboard-escape-quit)
 #+end_src
 
 * UI
@@ -115,15 +128,103 @@ Remove Tool Bars
   (load-theme 'tango-dark t)
 #+END_SRC
 
+** Fonts
+#+begin_src emacs-lisp
+  (use-package nerd-icons
+    :ensure t)
+#+end_src
+
+** Icons (all-the-icons)
+This is an icon set that can be used with dashboard, dired, ibuffer and other Emacs programs.
+
+#+begin_src emacs-lisp
+  (use-package all-the-icons
+    :ensure t
+    :if (display-graphic-p))
+
+  (use-package all-the-icons-dired
+    :ensure t
+    :hook (dired-mode . (lambda () (all-the-icons-dired-mode t))))
+#+end_src
+
+* MODELINE
+The modeline is the bottom status bar that appears in Emacs windows.  While you can create your own custom modeline, why go to the trouble when Doom Emacs already has a nice modeline package available.  For more information on what is available to configure in the Doom modeline, check out: [[https://github.com/seagle0128/doom-modeline][Doom Modeline]]
+
+#+begin_src emacs-lisp
+  (use-package doom-modeline
+    :ensure t
+    :after nerd-icons
+    :init (doom-modeline-mode 1)
+    :config
+    (setq doom-modeline-height 35      ;; sets modeline height
+          doom-modeline-bar-width 5    ;; sets right bar width
+          doom-modeline-persp-name t   ;; adds perspective name to modeline
+          doom-modeline-persp-icon t)) ;; adds folder icon next to persp name
+
+#+end_src
+
+* NEOTREE
+Neotree is a file tree viewer.  When you open neotree, it jumps to the current file thanks to neo-smart-open.  The neo-window-fixed-size setting makes the neotree width be adjustable.  NeoTree provides following themes: classic, ascii, arrow, icons, and nerd.  Theme can be config'd by setting "two" themes for neo-theme: one for the GUI and one for the terminal.  I like to use 'SPC t' for 'toggle' keybindings, so I have used 'SPC t n' for toggle-neotree.
+
+| COMMAND        | DESCRIPTION               | KEYBINDING |
+|----------------+---------------------------+------------|
+| neotree-toggle | /Toggle neotree/            | SPC t n    |
+| neotree- dir   | /Open directory in neotree/ | SPC d n    |
+
+#+BEGIN_SRC emacs-lisp
+(use-package neotree
+  :config
+  (setq neo-smart-open t
+        neo-show-hidden-files t
+        neo-window-width 55
+        neo-window-fixed-size nil
+        inhibit-compacting-font-caches t
+        projectile-switch-project-action 'neotree-projectile-action) 
+        ;; truncate long file names in neotree
+        (add-hook 'neo-after-create-hook
+           #'(lambda (_)
+               (with-current-buffer (get-buffer neo-buffer-name)
+                 (setq truncate-lines t)
+                 (setq word-wrap nil)
+                 (make-local-variable 'auto-hscroll-mode)
+                 (setq auto-hscroll-mode nil)))))
+
+#+end_src
+
 * Dashboard
 #+begin_src emacs-lisp
   (use-package dashboard
     :ensure t
+    :init
+    (setq initial-buffer-choice 'dashboard-open)
+    (setq dashboard-set-heading-icons t)
+    (setq dashboard-set-file-icons t)
     :config
     (dashboard-setup-startup-hook))
 
     (setq dashboard-banner-logo-title "Welcome to Emacs, Markus!")
     (setq dashboard-startup-banner nil)
+#+end_src
+
+* COMPANY
+[[https://company-mode.github.io/][Company]] is a text completion framework for Emacs. The name stands for "complete anything".  Completion will start automatically after you type a few letters. Use M-n and M-p to select, <return> to complete or <tab> to complete the common part.
+
+#+begin_src emacs-lisp
+  (use-package company
+    :defer 2
+    :diminish
+    :custom
+    (company-begin-commands '(self-insert-command))
+    (company-idle-delay .1)
+    (company-minimum-prefix-length 2)
+    (company-show-numbers t)
+    (company-tooltip-align-annotations 't)
+    (global-company-mode t))
+
+  (use-package company-box
+    :after company
+    :diminish
+    :hook (company-mode . company-box-mode))
 #+end_src
 
 * ORG MODE
@@ -170,7 +271,7 @@ Org-bullets gives us attractive bullets rather than asterisks.
            which-key-side-window-max-height 0.25
            which-key-idle-delay 0.8
            which-key-max-description-length 25
-           which-key-allow-imprecise-window-fit t
+           which-key-allow-imprecise-window-fit nil
            which-key-separator " → " ))
  #+end_src
 
@@ -211,11 +312,12 @@ Org-bullets gives us attractive bullets rather than asterisks.
 
 ** Counsel configuration
 #+BEGIN_SRC emacs-lisp
-(use-package counsel 
-  :ensure t
-  :config 
-  (global-set-key (kbd "M-x") 'counsel-M-x)
-  (global-set-key (kbd "C-x C-f") 'counsel-find-file))
+  (use-package counsel
+    :after ivy
+    :ensure t
+    :config 
+    (global-set-key (kbd "M-x") 'counsel-M-x)
+    (global-set-key (kbd "C-x C-f") 'counsel-find-file))
 #+END_SRC
 
 ** Git
