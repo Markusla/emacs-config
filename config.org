@@ -10,7 +10,11 @@
   - [[#melpa-package-archive][MELPA Package-Archive]]
   - [[#use-package][use-package]]
   - [[#always-use-ensure-t][always use :ensure t]]
+- [[#backupfiles][Backupfiles]]
 - [[#utf-8][UTF-8]]
+- [[#core][Core]]
+  - [[#autoload-changed-files][autoload changed Files]]
+  - [[#autorefresh-dired-and-other-buffers][autorefresh dired and other buffers]]
 - [[#keybindings][Keybindings]]
   - [[#minibuffer-escape][MINIBUFFER ESCAPE]]
 - [[#ui][UI]]
@@ -36,7 +40,7 @@
   - [[#setup-and-use-ivy][Setup and use Ivy]]
   - [[#configure-swiper][Configure Swiper]]
   - [[#counsel-configuration][Counsel configuration]]
-  - [[#git][Git]]
+- [[#git][Git]]
 
 * Package Management
 
@@ -66,6 +70,17 @@
   (setq use-package-always-ensure t)
 #+end_src
 
+* Backupfiles
+#+begin_src emacs-lisp
+  (setq backup-directory-alist '(("." . "~/.config/emacs/backup"))
+    backup-by-copying t    ; Don't delink hardlinks
+    version-control t      ; Use version numbers on backups
+    delete-old-versions t  ; Automatically delete excess backups
+    kept-new-versions 20   ; how many of the newest versions to keep
+    kept-old-versions 5    ; and how many of the old
+    )
+#+end_src
+
 * UTF-8 
 #+begin_src emacs-lisp
   (cond ((eq system-type 'windows-nt)
@@ -77,6 +92,19 @@
       ((eq system-type 'gnu/linux)
        ;; Linux-specific code goes here. 
        ))
+#+end_src
+
+* Core
+** autoload changed Files
+Revert buffers when underlying file has changed
+
+#+begin_src emacs-lisp
+  (global-auto-revert-mode 1)
+#+end_src
+
+** autorefresh dired and other buffers
+#+begin_src emasc-lisp
+  (setq global-auto-revert-non-file-buffers t)
 #+end_src
 
 * Keybindings
@@ -293,14 +321,31 @@ Org-bullets gives us attractive bullets rather than asterisks.
 ** Setup and use Ivy
  #+BEGIN_SRC emacs-lisp
    (use-package ivy
-     :ensure t
-     :config
-     (ivy-mode 1)
-     (setq ivy-use-virtual-buffers t)
-     (setq enable-recursive-minibuffers t)
-     ;; Ivy Keybindings
-     (global-set-key (kbd "C-c C-r") 'ivy-resume))
-     #+END_SRC
+           :ensure t
+           :config
+           (ivy-mode 1)
+           (setq ivy-use-virtual-buffers t)
+           (setq enable-recursive-minibuffers t)
+           ;; Ivy Keybindings
+           (global-set-key (kbd "C-c C-r") 'ivy-resume))
+
+   
+   (use-package all-the-icons-ivy-rich
+        :ensure t
+        :init (all-the-icons-ivy-rich-mode 1))
+
+   (use-package ivy-rich
+        :after ivy
+        :ensure t
+        :init (ivy-rich-mode 1) ;; this gets us descriptions in M-x.
+        :custom
+        (ivy-virtual-abbreviate 'full
+         ivy-rich-switch-buffer-align-virtual-buffer t
+         ivy-rich-path-style 'abbrev)
+        :config
+        (ivy-set-display-transformer 'ivy-switch-buffer
+                                     'ivy-rich-switch-buffer-transformer))
+ #+END_SRC
 
 ** Configure Swiper
 #+BEGIN_SRC emacs-lisp
@@ -320,7 +365,7 @@ Org-bullets gives us attractive bullets rather than asterisks.
     (global-set-key (kbd "C-x C-f") 'counsel-find-file))
 #+END_SRC
 
-** Git
+* Git
 I use magit for easy git management
 #+BEGIN_SRC emacs-lisp
   (use-package magit
